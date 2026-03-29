@@ -1158,16 +1158,23 @@ const patternDataI18n = {
   }
 };
 
-let currentLang = localStorage.getItem('harness-lang') || (function() {
+// Language priority: URL hash > localStorage > browser language
+function detectLang() {
+  const hash = location.hash.replace('#', '').toLowerCase();
+  if (['en', 'ko', 'ja'].includes(hash)) return hash;
+  const stored = localStorage.getItem('harness-lang');
+  if (stored) return stored;
   const nav = (navigator.language || '').toLowerCase();
   if (nav.startsWith('ko')) return 'ko';
   if (nav.startsWith('ja')) return 'ja';
   return 'en';
-})();
+}
+let currentLang = detectLang();
 
 function setLang(lang) {
   currentLang = lang;
   localStorage.setItem('harness-lang', lang);
+  history.replaceState(null, '', '#' + lang);
   document.documentElement.lang = lang;
 
   // Update all data-i18n elements
@@ -1376,6 +1383,10 @@ function copyCode(block) {
 // ── Initialize language on load ──
 document.addEventListener('DOMContentLoaded', () => {
   setLang(currentLang);
+});
+window.addEventListener('hashchange', () => {
+  const lang = location.hash.replace('#', '').toLowerCase();
+  if (['en', 'ko', 'ja'].includes(lang) && lang !== currentLang) setLang(lang);
 });
 </script>
 </body>
